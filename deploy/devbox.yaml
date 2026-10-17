@@ -1,0 +1,51 @@
+# The dev box on AKS. Nothing is exposed: people reach sshd through `kubectl exec`, so namespace access is the gate.
+# Apply with: kubectl -n devbox apply -f deploy/devbox.yaml
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: devbox
+spec:
+  serviceName: devbox
+  # Never more than one: the volume is ReadWriteOnce, and Herdr's session belongs to one pod.
+  replicas: 1
+  selector:
+    matchLabels: { app: devbox }
+  template:
+    metadata:
+      labels: { app: devbox }
+    spec:
+      securityContext:
+        runAsUser: 1000
+        runAsGroup: 1000
+        runAsNonRoot: true
+        fsGroup: 1000
+        fsGroupChangePolicy: OnRootMismatch
+      containers:
+        - name: devbox
+          image: contoso.azurecr.io/devbox:0.1.0
+          ports:
+            - containerPort: 2222
+          securityContext:
+            allowPrivilegeEscalation: false
+            capabilities: { drop: [ALL] }
+          readinessProbe:
+            tcpSocket: { port: 2222 }
+          resources:
+            # Fits a 4-vCPU, 32 GiB E4s_v5 node alongside AKS's own reservations.
+            requests: { cpu: "2", memory: 12Gi }
+            limits: { memory: 24Gi }
+          volumeMounts:
+            - { name: work, mountPath: /work }
+            - { name: keys, mountPath: /etc/devbox/keys, readOnly: true }
+      volumes:
+        - name: keys
+          configMap: { name: devbox-keys }
+  volumeClaimTemplates:
+    - metadata:
+        name: work
+      spec:
+        accessModes: [ReadWriteOnce]
+        storageClassName: managed-csi-premium
+        resources:
+          # A Premium SSD P10. It can grow online later (edit and re-apply the PVC), but never shrink.
+          requests: { storage: 128Gi }

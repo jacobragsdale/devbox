@@ -1,0 +1,20 @@
+# sshd runs as the `team` user, so it can only log people in as team. Keys only.
+Port 2222
+HostKey /work/.home/.devbox/ssh_host_ed25519_key
+PidFile none
+# The devbox-keys ConfigMap, built from people/*.pub. sshd rereads it at every login.
+AuthorizedKeysFile /etc/devbox/keys/authorized_keys
+# StrictModes rejects the ConfigMap's and volume's ownership, and there is only one account to protect.
+StrictModes no
+UsePAM no
+PasswordAuthentication no
+KbdInteractiveAuthentication no
+PermitRootLogin no
+X11Forwarding no
+PrintMotd no
+ClientAliveInterval 30
+AcceptEnv LANG LC_* COLORTERM TERM_PROGRAM
+Subsystem sftp internal-sftp
+
+# Sessions don't inherit the container's environment, so everything a login needs is set here.
+SetEnv PATH=/usr/local/lib/devbox/bin:/work/.home/.local/bin:/work/.home/.npm-global/bin:/work/.home/.dotnet/tools:/opt/node/bin:/usr/share/dotnet:/usr/local/bin:/usr/bin:/bin LANG=C.UTF-8 NPM_CONFIG_PREFIX=/work/.home/.npm-global DOTNET_ROOT=/usr/share/dotnet DOTNET_CLI_TELEMETRY_OPTOUT=1 AGENT_CLI_SQL_ORACLE_CLIENT_DIR=/opt/oracle/instantclient_23_26 DD_TOKEN_STORAGE=file

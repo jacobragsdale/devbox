@@ -1,0 +1,11 @@
+#!/bin/sh
+# Runs as team under tini. The SSH host key lives on the volume, so a restart doesn't change it.
+set -eu
+key="$HOME/.devbox/ssh_host_ed25519_key"
+mkdir -p "$HOME/.devbox" "$HOME/.config/opencode" "$HOME/.cursor/rules"
+[ -f "$key" ] || ssh-keygen -q -t ed25519 -N '' -C devbox -f "$key"
+# The box's instructions for agents that read them from the shared home: OpenCode's global rules and a
+# Cursor user rule.
+ln -sf /etc/devbox/AGENTS.md "$HOME/.config/opencode/AGENTS.md"
+ln -sf /etc/devbox/devbox.mdc "$HOME/.cursor/rules/devbox.mdc"
+exec /usr/sbin/sshd -D -e -f /etc/ssh/devbox_sshd_config

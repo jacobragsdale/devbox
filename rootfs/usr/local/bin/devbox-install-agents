@@ -1,0 +1,5 @@
+#!/bin/sh
+# Installs or updates the team's agents in the shared home, where they keep updating themselves.
+set -eu
+npm install -g --no-fund --no-audit @earendil-works/pi-coding-agent @github/copilot opencode-ai
+curl -fsS https://cursor.com/install | bash

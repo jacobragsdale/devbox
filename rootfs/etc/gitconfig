@@ -1,0 +1,4 @@
+[credential "https://dev.azure.com"]
+	helper = devbox-ado
+[init]
+	defaultBranch = main

@@ -1,0 +1,4 @@
+#!/bin/sh
+# pup keeps its login in ~/.config/pup and has no setting to move it, so each person gets their own HOME for it.
+# XDG_CONFIG_HOME goes too: inside Cursor's agent it points at Cursor's folder.
+exec env -u XDG_CONFIG_HOME HOME="${PUP_HOME:-$HOME}" /opt/pup/pup "$@"

@@ -1,0 +1,33 @@
+#!/bin/bash
+# Who's on the box: each person's repos, and every agent in the box's Herdr session.
+set -u
+
+echo "You work for: ${DEV:-nobody yet (run: me NAME)}"
+echo
+echo "People and repos:"
+for dir in /work/*/; do
+    [ -d "$dir.devbox" ] || continue
+    line="  $(basename "$dir"):"
+    found=
+    for git in "$dir"*/.git; do
+        [ -e "$git" ] || continue
+        repo=${git%/.git}
+        branch=$(git -C "$repo" branch --show-current 2>/dev/null)
+        # --no-optional-locks: don't take the owner's index lock just to look.
+        changed=$(git --no-optional-locks -C "$repo" status --porcelain 2>/dev/null | wc -l)
+        line+=" ${repo##*/} (${branch:-detached}, $changed changed)"
+        found=1
+    done
+    [ -n "$found" ] || line+=" no repos"
+    echo "$line"
+done
+echo
+echo "Agents:"
+if ! agents=$(herdr agent list 2>/dev/null); then
+    echo "  Herdr isn't running yet."
+    exit 0
+fi
+jq -r '.result.agents[] | [(.name // .pane_id), .agent, .agent_status, .cwd] | @tsv' <<<"$agents" |
+    while IFS=$'\t' read -r name kind status cwd; do
+        printf '  %-16s %-9s %-8s %s\n' "$name" "$kind" "$status" "$cwd"
+    done

@@ -1,0 +1,5 @@
+#!/bin/sh
+# Cursor's CLI keeps its login in $XDG_CONFIG_HOME/cursor/auth.json, not in CURSOR_CONFIG_DIR, so each person
+# gets their own XDG_CONFIG_HOME for it. Installed as cursor-agent and agent, ahead of the real ones on PATH.
+[ -n "${CURSOR_CONFIG_DIR-}" ] && export XDG_CONFIG_HOME="$CURSOR_CONFIG_DIR/xdg"
+exec "$HOME/.local/bin/$(basename "$0")" "$@"
